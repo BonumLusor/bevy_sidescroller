@@ -68,19 +68,6 @@ pub fn setup_physics(
         Collider::capsule(Vec2::new(0.0, -10.0), Vec2::new(0.0, 10.0), 5.0),
         KinematicCharacterControllerOutput::default(),
         // Visual components with custom anchor for proper positioning
-        //
-        // Anchor options available:
-        // - Anchor::Center (default): Sprite centered on transform position
-        // - Anchor::BottomCenter: Bottom edge centered (good for characters on ground)
-        // - Anchor::TopCenter: Top edge centered
-        // - Anchor::CenterLeft: Left edge centered
-        // - Anchor::CenterRight: Right edge centered
-        // - Anchor::BottomLeft: Bottom-left corner
-        // - Anchor::BottomRight: Bottom-right corner
-        // - Anchor::TopLeft: Top-left corner
-        // - Anchor::TopRight: Top-right corner
-        // - Anchor::Custom(Vec2): Custom offset from center (-0.5 to 0.5)
-        //   Example: Anchor::Custom(Vec2::new(0.0, -0.3)) for slightly below center
         Sprite {
             image: idle_texture_handle,
             texture_atlas: Some(TextureAtlas {

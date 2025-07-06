@@ -13,15 +13,9 @@ mod systems;
 
 use constants::{DEFAULT_WINDOW_HEIGHT, DEFAULT_WINDOW_WIDTH, PIXELS_PER_METER};
 use systems::{
-    setup_level_editor,
-    level_editor_input,
-    level_editor_mouse,
-    level_editor_save_load,
-    level_editor_ui,
     debug_tile_collisions, debug_tile_grid, debug_tile_info, debug_tileset_info,
-    execute_animations, load_level, move_player, setup_graphics, setup_parallax_backgrounds,
-    setup_physics, toggle_debug_render, update_animation_state, update_background_size_on_resize,
-    update_camera_follow, update_facing_direction, update_parallax, update_tile_collisions,
+    execute_animations, move_player, setup_graphics,
+    setup_physics, toggle_debug_render, update_animation_state, update_facing_direction,
 };
 
 fn main() {
@@ -44,10 +38,7 @@ fn main() {
             Startup,
             (
                 setup_graphics,
-                setup_parallax_backgrounds,
                 setup_physics,
-                load_level,
-                setup_level_editor,
             ),
         )
         .add_systems(
@@ -58,16 +49,6 @@ fn main() {
                 update_facing_direction,
                 update_animation_state,
                 execute_animations,
-                update_camera_follow,
-                update_parallax,
-                update_background_size_on_resize,
-                // Sistemas do editor de level
-                level_editor_input,
-                level_editor_mouse,
-                level_editor_save_load,
-                level_editor_ui,
-                // Sistemas de debug e tile
-                update_tile_collisions,
                 debug_tile_info,
                 debug_tile_grid,
                 debug_tile_collisions,
