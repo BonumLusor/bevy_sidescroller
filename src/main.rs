@@ -1,92 +1,78 @@
+//! Bevy Sidescroller Game
+//!
+//! A 2D sidescroller game built with Bevy and Rapier2D physics.
+//! Features character movement, animations, and sprite flipping.
+
 use bevy::prelude::*;
 use bevy_rapier2d::prelude::*;
+use bevy_egui::EguiPlugin;
 
-const PLAYER_SPEED: f32 = 500.0;
-const GRAVITY: f32 = -981.0;
-const JUMP_FORCE: f32 = 450.0;
+mod components;
+mod constants;
+mod systems;
 
-#[derive(Component, Default)]
-struct PlayerVelocity(Vec2);
+use constants::{DEFAULT_WINDOW_HEIGHT, DEFAULT_WINDOW_WIDTH, PIXELS_PER_METER};
+use systems::{
+    setup_level_editor,
+    level_editor_input,
+    level_editor_mouse,
+    level_editor_save_load,
+    level_editor_ui,
+    debug_tile_collisions, debug_tile_grid, debug_tile_info, debug_tileset_info,
+    execute_animations, load_level, move_player, setup_graphics, setup_parallax_backgrounds,
+    setup_physics, toggle_debug_render, update_animation_state, update_background_size_on_resize,
+    update_camera_follow, update_facing_direction, update_parallax, update_tile_collisions,
+};
 
 fn main() {
     App::new()
-        .add_plugins(DefaultPlugins)
-        .add_plugins(RapierPhysicsPlugin::<NoUserData>::pixels_per_meter(100.0))
+        .add_plugins(DefaultPlugins.set(WindowPlugin {
+            primary_window: Some(Window {
+                title: "Bevy Sidescroller".into(),
+                resolution: (DEFAULT_WINDOW_WIDTH, DEFAULT_WINDOW_HEIGHT).into(),
+                resizable: true,
+                ..default()
+            }),
+            ..default()
+        }))
+        .add_plugins(EguiPlugin::default())
+        .add_plugins(RapierPhysicsPlugin::<NoUserData>::pixels_per_meter(
+            PIXELS_PER_METER,
+        ))
         .add_plugins(RapierDebugRenderPlugin::default())
-        .add_systems(Startup, (setup_graphics, setup_physics))
-        .add_systems(Update, move_player)
+        .add_systems(
+            Startup,
+            (
+                setup_graphics,
+                setup_parallax_backgrounds,
+                setup_physics,
+                load_level,
+                setup_level_editor,
+            ),
+        )
+        .add_systems(
+            Update,
+            (
+                toggle_debug_render,
+                move_player,
+                update_facing_direction,
+                update_animation_state,
+                execute_animations,
+                update_camera_follow,
+                update_parallax,
+                update_background_size_on_resize,
+                // Sistemas do editor de level
+                level_editor_input,
+                level_editor_mouse,
+                level_editor_save_load,
+                level_editor_ui,
+                // Sistemas de debug e tile
+                update_tile_collisions,
+                debug_tile_info,
+                debug_tile_grid,
+                debug_tile_collisions,
+                debug_tileset_info,
+            ),
+        )
         .run();
 }
-
-fn setup_graphics(mut commands: Commands) {
-    // Add a camera so we can see the debug-render.
-    commands.spawn(Camera2d::default());
-}
-
-fn setup_physics(mut commands: Commands) {
-    /* Create the ground. */
-    commands
-        .spawn(Collider::cuboid(500.0, 50.0))
-        .insert(Name::new("Ground"))
-        .insert(Transform::from_xyz(0.0, -100.0, 0.0));
-
-    /* Create the bouncing ball. */
-    commands
-        .spawn(RigidBody::Dynamic)
-        .insert(Collider::ball(50.0))
-        .insert(Restitution::coefficient(0.7))
-        .insert(Transform::from_xyz(0.0, 400.0, 0.0));
-
-    /* Create the player */
-    commands
-        .spawn(KinematicCharacterController {
-            offset: CharacterLength::Absolute(0.01),
-            ..default()
-        })
-        .insert(Collider::ball(30.0))
-        .insert(Name::new("Player"))
-        .insert(Transform::from_xyz(0.0, 100.0, 0.0))
-        .insert(PlayerVelocity::default())
-        .insert(KinematicCharacterControllerOutput::default());
-}
-
-fn move_player(
-    time: Res<Time>,
-    mut controllers: Query<(
-        &mut KinematicCharacterController,
-        &mut PlayerVelocity,
-        &KinematicCharacterControllerOutput,
-    )>,
-    keyboard: Res<ButtonInput<KeyCode>>,
-) {
-    for (mut controller, mut velocity, output) in controllers.iter_mut() {
-        // Reinicia a velocidade vertical se estiver no chão para evitar o acúmulo de gravidade.
-        if output.grounded {
-            velocity.0.y = 0.0;
-        }
-
-        // Aplica a gravidade
-        velocity.0.y += GRAVITY * time.delta_secs();
-
-        // Movimento horizontal
-        let mut horizontal_movement = 0.0;
-        if keyboard.pressed(KeyCode::KeyA) {
-            horizontal_movement -= 1.0;
-        }
-        if keyboard.pressed(KeyCode::KeyD) {
-            horizontal_movement += 1.0;
-        }
-        velocity.0.x = horizontal_movement * PLAYER_SPEED;
-
-        // Pulo
-        if keyboard.just_pressed(KeyCode::KeyW) && output.grounded {
-            velocity.0.y = JUMP_FORCE;
-        }
-
-        // Aplica a velocidade ao controlador
-        controller.translation = Some(velocity.0 * time.delta_secs());
-    }
-}
-
-
-
